@@ -1,6 +1,27 @@
 # Compiled class file
 *.class
 
+# Emacs, Vi and other editor temp files
+*~
+.#*
+
+# Intellij project settings folder
+.idea/
+
+# Files and folders for Intellij and other IDEs
+bin/
+out/
+generated-srcs/
+.classpath
+.project
+.settings
+*.ipr
+*.iws
+*.iml
+
+# Build destination for Maven
+target/
+
 # Log file
 *.log
 
@@ -21,3 +42,6 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# Mac custom attributes file
+.DS_Store
