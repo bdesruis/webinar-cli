@@ -1,0 +1,96 @@
+#
+# Webinar Manager CLI for Zoom
+#
+zoom:
+  # See: https://marketplace.zoom.us/develop/create
+  jwtToken: replace.with.your.jwtToken
+
+calendar:
+  descriptionPrefix: "Inscription au cours:\n\t"
+  descriptionSuffix: ""
+
+mail:
+  from:
+    email: donotreply@example.com
+    name: Example (do not reply)
+  fromPassword: sesame
+  replyTo:
+    email: support@example.com
+    name: Example Support
+  bcc:
+    email: admin@example.com
+    name: Example Admin
+  smtpHost: smtp.gmail.com
+  smtpPort: 465
+  smtpSslEnable: true
+  smtpAuth: true
+  debug: false
+  subject: Accès cours en ligne ({TIMERANGE})
+  content: |
+    <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+    <html>
+    <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title><!--SUBJECT--></title>
+    <style>
+    div.notice {
+      -webkit-border-radius: 15px;
+      -moz-border-radius: 15px;
+      border-radius: 15px;
+      margin: 0px 0px;
+      padding: 5px 10px;
+      background-color: #F27625;
+      color: #FFFFFF;
+    }
+    </style>
+    </head>
+    <body style="font-family:Arial;font-size:14px">
+    <!--NOTICE-->
+    <!--FIRSTNAME-->,<br>
+    <br>
+    Vous trouverez dans le tableau ci-joint la liste des cours en ligne à l'horaire pour les deux prochaines semaines.
+    Les liens qui s'y trouvent vous permettront de participer aux cours en ligne sans payer les coûts associés à chacun des cours.<br>
+    <br>
+    Ces liens ne sont que pour votre usage personnel. Merci de garder ces liens pour vous.<br>
+    <br>
+    <table border="1" cellspacing="0" cellpadding="4" style="font-family:Arial;font-size:14px">
+    <!--TABLEROWS-->
+    </table>
+    <br>
+    Si vous avez des questions, n'hésitez pas à nous contacter via notre courriel info@example.com.<br>
+    <br>
+    Merci,<br>
+    Jean pour<br>
+    Example Inc.<br>
+    </p>
+    </body>
+    </html>
+  renewalNoticePeriodInDays: 21
+  renewalNotice: |
+    <div class="notice">
+    <table style="color:#FFFFFF;">
+    <tr>
+      <td valign="top"><div style="font-size:54px">&#x26a0;&nbsp;</div></td>
+      <td><div style="font-variant: small-caps;font-size:18px;font-weight: bold;">Bonjour,</div>
+          Nos registres nous indiquent que votre <em>Abonnement Annuel – au Centre et en ligne</em>
+          expirera le <b><!--EXPIRYDATE--></b>.
+      </td>
+    <tr>
+      <td colspan=2>
+          Voici les étapes à suivre pour effectuer votre renouvellement&nbsp;:
+          <ol>
+            <li>Visitez la page <a href="https://iyengaryogamontreal.com/tarifs-des-cours">Tarif des cours</a> sur le site web du centre&nbsp;;</li>
+            <li>Rendez-vous dans la section <b>Cours au Centre et en ligne</b> au bas de la page&nbsp;;</li>
+            <li>Choisissez le nombre de versements&nbsp;;</li>
+            <li>Cliquez sur le bouton <b>Souscrire</b>&nbsp;;</li>
+            <li>Suivez les étapes pour compléter votre renouvellement.</li>
+          </ol>
+          Merci de votre confiance! &#x1f64f;<br>
+          &mdash; L'équipe du centre<br><br>
+      </td>
+    </tr>
+    </table>
+    </div>
+    <p>
+  expiryTableRow: |
+    <tr style="background-color: #F27625; color: #FFFFFF;"><td colspan=3 align=center><b>Abonnement expiré<b></td></tr>
