@@ -65,6 +65,9 @@ public class App implements Runnable {
     private Session mailSession;
     final private ZoneId localZoneId = ZoneId.systemDefault();
 
+    @Parameter(names = "--config", description = "Configuration file name")
+    private String configFileName;
+
     @Parameter(names = "--webinarId", description = "Select webinar with this id")
     private List<Long> webinardIds = new ArrayList<>();
     @Parameter(names = "--rangeStart", description = "Select webinars scheduled after this date (YYYY-MM-DD)")
@@ -450,7 +453,22 @@ public class App implements Runnable {
         try {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             mapper.findAndRegisterModules();
-            appConfig = mapper.readValue(new File("config.yml"), AppConfiguration.class);
+
+            File configFile;
+            if (StringUtils.isNotEmpty(configFileName)) {
+                configFile = new File(configFileName);
+            } else {
+                String homeDir = System.getProperty("user.home");
+                configFileName = homeDir + File.separator + ".webinar-cli" + File.separator + "config.yml";
+                configFile = new File(configFileName);
+                if (!configFile.exists()) {
+                    configFileName = "config.yml";
+                    configFile = new File(configFileName);
+                }
+            }
+            log.info("Configuration file: {}", configFileName);
+
+            appConfig = mapper.readValue(configFile, AppConfiguration.class);
 
             zoomClient = ZoomClient.builder().fromConfig(appConfig.getZoom()).build();
 
