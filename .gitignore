@@ -45,3 +45,6 @@ hs_err_pid*
 
 # Mac custom attributes file
 .DS_Store
+
+subscribers.csv
+run.sh
