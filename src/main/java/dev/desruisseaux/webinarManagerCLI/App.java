@@ -169,8 +169,8 @@ public class App implements Runnable {
                 for (ZoomWebinar webinar : webinarList) {
                     LocalDateTime localStartTime = webinar.getStartTime().toInstant().atZone(localZoneId).toLocalDateTime();
                     String startTime = localStartTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-                    String dayOfWeek = localStartTime.format(DateTimeFormatter.ofPattern("EEEE"));
-                    System.out.printf("%d %-8s %s %s\n", webinar.getId(), dayOfWeek, startTime, webinar.getTopic());
+                    String dayOfWeek = localStartTime.format(DateTimeFormatter.ofPattern("E"));
+                    System.out.printf("%d %s %s %s\n", webinar.getId(), dayOfWeek, startTime, webinar.getTopic());
                 }
             }
         } catch (Throwable e) {
@@ -322,11 +322,21 @@ public class App implements Runnable {
 
     public void registerSubscribersAsPanelistToWebinars(List<Subscriber> subscribers, List<ZoomWebinar> webinarList) {
         try {
-            List<ZoomWebinarPanelist> allPanelists = new ArrayList<>();
-            subscribers.forEach(s -> allPanelists.add(new ZoomWebinarPanelist(s.getFirstName() + " " + s.getLastName(), s.getEmail())));
-            List<List<ZoomWebinarPanelist>> panelistsPartitions = Lists.partition(allPanelists, 25);
-
             for (ZoomWebinar webinar : webinarList) {
+                List<ZoomWebinarPanelist> allPanelists = new ArrayList<>();
+                LocalDateTime localStartTime = webinar.getStartTime().toInstant().atZone(localZoneId).toLocalDateTime();
+                for (Subscriber s : subscribers) {
+                    boolean isValid = true;
+                    Date expiryDate = s.getExpiryDate();
+                    if (expiryDate != null) {
+                        LocalDateTime localExpiryDate = expiryDate.toInstant().atZone(ZoneId.of("UTC")).toLocalDateTime();
+                        if (localStartTime.isAfter(localExpiryDate.plusDays(1L)))
+                            isValid = false;
+                    }
+                     if (isValid)
+                         allPanelists.add(new ZoomWebinarPanelist(s.getFirstName() + " " + s.getLastName(), s.getEmail()));
+                }
+                List<List<ZoomWebinarPanelist>> panelistsPartitions = Lists.partition(allPanelists, 25);
                 for (List<ZoomWebinarPanelist> panelistsPartition : panelistsPartitions) {
                     ZoomWebinarPanelists newPanelists = new ZoomWebinarPanelists(panelistsPartition);
                     ZoomWebinarPanelistsCreateResponse response = zoomClient.webinarPanelists().create(webinar.getId(), newPanelists).execute();

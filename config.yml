@@ -3,6 +3,7 @@
 #
 zoom:
   # See: https://marketplace.zoom.us/develop/create
+  #      https://marketplace.zoom.us/docs/guides/auth/jwt
   jwtToken: replace.with.your.jwtToken
 
 calendar:
