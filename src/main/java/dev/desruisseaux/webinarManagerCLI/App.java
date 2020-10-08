@@ -32,12 +32,16 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.mail.Authenticator;
+import javax.mail.BodyPart;
 import javax.mail.Message;
+import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -202,11 +206,23 @@ public class App implements Runnable {
 
             message.addRecipient(Message.RecipientType.TO, toAddr);
             message.setSubject(subject,"UTF-8");
-            message.setContent(content, "text/html;charset=UTF-8");
+
+            Multipart multipart = new MimeMultipart("alternative");
+            BodyPart messageBodyPart = new MimeBodyPart();
+            messageBodyPart.setContent("Veuillez utiliser un client de messagerie prenant en charge le format HTML.", "text/plain;charset=UTF-8");
+            multipart.addBodyPart(messageBodyPart);
+
+            messageBodyPart = new MimeBodyPart();
+
+            messageBodyPart.setContent(content, "text/html;charset=UTF-8");
+            multipart.addBodyPart(messageBodyPart);
+            message.setContent(multipart);
+
             // Specify that automatic responses are not desirable (e.g., Out of office)
             message.setHeader("Auto-Submitted", "auto-generated");
             // https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcmail/ced68690-498a-4567-9d14-5c01f974d8b1
             message.setHeader("X-Auto-Response-Suppress", "OOF, AutoReply");
+            message.setHeader("List-Unsubscribe", "<mailto:iyengaryogamontreal@gmail.com?subject=Désabonnement>");
             Transport.send(message);
             log.info("Sent message successfully to {}", toAddr.getAddress());
         } catch (Exception e) {
@@ -536,11 +552,13 @@ public class App implements Runnable {
                 if (StringUtils.isNotEmpty(subscriberFileName)) {
                     subscribers = getSubscribers(subscriberFileName);
                 } else if (StringUtils.isNotEmpty(subscriberFirstName) && StringUtils.isNotEmpty(subscriberLastName) && StringUtils.isNotEmpty(subscriberEmail)) {
-                    Subscriber.SubscriberBuilder sb = Subscriber.builder().firstName(subscriberFirstName).lastName(subscriberLastName).email(subscriberEmail);
-                    if (subscriberExpiryDate != null) {
-                        sb.expiryDate(subscriberExpiryDate);
-                    }
-                    subscribers = Collections.singletonList(sb.build());
+                    Subscriber subscriber = Subscriber.builder()
+                            .firstName(subscriberFirstName)
+                            .lastName(subscriberLastName)
+                            .email(subscriberEmail)
+                            .expiryDate(subscriberExpiryDate)
+                            .build();
+                    subscribers = Collections.singletonList(subscriber);
                 }
 
                 if (subscribers != null && !subscribers.isEmpty()) {
