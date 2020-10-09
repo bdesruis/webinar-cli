@@ -14,10 +14,13 @@ public class MailConfiguration {
     private String fromPassword;
     private EmailAddressConfig replyTo;
     private EmailAddressConfig bcc;
+    private EmailAddressConfig listUnsubscribe;
     @NotEmpty
     private String subject;
     @NotEmpty
-    private String content;
+    private String textPlainContent;
+    @NotEmpty
+    private String textHtmlContent;
     @NotEmpty
     private String renewalNotice;
     @NotEmpty

@@ -21,13 +21,16 @@ mail:
   bcc:
     email: admin@example.com
     name: Example Admin
+  listUnsubscribe:
+    email: unsubscribe@example.com
   smtpHost: smtp.gmail.com
   smtpPort: 465
   smtpSslEnable: true
   smtpAuth: true
   debug: false
   subject: Accès cours en ligne ({TIMERANGE})
-  content: |
+  textPlainContent: You need an HTML capable email reader to view this email.
+  textHtmlContent: |
     <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
     <html>
     <head>

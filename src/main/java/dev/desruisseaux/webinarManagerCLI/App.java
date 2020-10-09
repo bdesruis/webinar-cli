@@ -209,7 +209,7 @@ public class App implements Runnable {
 
             Multipart multipart = new MimeMultipart("alternative");
             BodyPart messageBodyPart = new MimeBodyPart();
-            messageBodyPart.setContent("Veuillez utiliser un client de messagerie prenant en charge le format HTML.", "text/plain;charset=UTF-8");
+            messageBodyPart.setContent(appConfig.getMail().getTextPlainContent(), "text/plain;charset=UTF-8");
             multipart.addBodyPart(messageBodyPart);
 
             messageBodyPart = new MimeBodyPart();
@@ -222,7 +222,10 @@ public class App implements Runnable {
             message.setHeader("Auto-Submitted", "auto-generated");
             // https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcmail/ced68690-498a-4567-9d14-5c01f974d8b1
             message.setHeader("X-Auto-Response-Suppress", "OOF, AutoReply");
-            message.setHeader("List-Unsubscribe", "<mailto:iyengaryogamontreal@gmail.com?subject=Désabonnement>");
+            // https://tools.ietf.org/html/rfc2369
+            if (appConfig.getMail().getListUnsubscribe() != null) {
+                message.setHeader("List-Unsubscribe", "<mailto:" + appConfig.getMail().getListUnsubscribe().getEmail() + "?subject=Unsubscribe>");
+            }
             Transport.send(message);
             log.info("Sent message successfully to {}", toAddr.getAddress());
         } catch (Exception e) {
@@ -383,8 +386,8 @@ public class App implements Runnable {
 
     public void processSubscriberEmails(List<Subscriber> subscribers, List<ZoomWebinar> webinarList, Map<Pair<Long,String>,String> panelistsJoinUrlMap) {
         try {
-            String template = appConfig.getMail().getContent();
-            String subject = appConfig.getMail().getSubject().replaceFirst("\\{TIMERANGE\\}", formatTimeRange(rangeStart, rangeEnd, localZoneId));
+            String template = appConfig.getMail().getTextHtmlContent();
+            String subject = appConfig.getMail().getSubject().replaceFirst("\\{TIMERANGE}", formatTimeRange(rangeStart, rangeEnd, localZoneId));
             template = template.replaceFirst("<!--SUBJECT-->", subject);
             LocalDateTime localNow = LocalDateTime.now(localZoneId);
 
