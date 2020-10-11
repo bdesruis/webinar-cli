@@ -61,6 +61,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.zip.CRC32;
+
+import static java.lang.Math.abs;
 
 @Slf4j
 public class App implements Runnable {
@@ -339,6 +342,17 @@ public class App implements Runnable {
         return webinarList;
     }
 
+    static String maskEmail(String email, String salt) {
+        CRC32 crc = new CRC32();
+        crc.update(email.getBytes());
+        crc.update(salt.getBytes());
+        return String.format("%d+%s.invalid", abs(crc.getValue()), email);
+    }
+
+    static String unmaskEmail(String maskedEmail) {
+        return maskedEmail.replaceFirst("^\\d+\\+(.*)\\.invalid$","$1");
+    }
+
     public void registerSubscribersAsPanelistToWebinars(List<Subscriber> subscribers, List<ZoomWebinar> webinarList) {
         try {
             for (ZoomWebinar webinar : webinarList) {
@@ -352,8 +366,10 @@ public class App implements Runnable {
                         if (localStartTime.isAfter(localExpiryDate.plusDays(1L)))
                             isValid = false;
                     }
-                     if (isValid)
-                         allPanelists.add(new ZoomWebinarPanelist(s.getFirstName() + " " + s.getLastName(), s.getEmail()));
+                     if (isValid) {
+                         String subscriberEmail = appConfig.getZoom().getMaskPanelistEmail() ? maskEmail(s.getEmail(), webinar.getCreatedAt().toString()) : s.getEmail();
+                         allPanelists.add(new ZoomWebinarPanelist(s.getFirstName() + " " + s.getLastName(), subscriberEmail));
+                     }
                 }
                 List<List<ZoomWebinarPanelist>> panelistsPartitions = Lists.partition(allPanelists, 25);
                 for (List<ZoomWebinarPanelist> panelistsPartition : panelistsPartitions) {
@@ -374,7 +390,8 @@ public class App implements Runnable {
             for (ZoomWebinar webinar : webinarList) {
                 ZoomWebinarPanelists panelists = zoomClient.webinarPanelists().list(webinar.getId()).execute();
                 for (ZoomWebinarPanelist panelist : panelists.getItems()) {
-                    panelistsJoinUrlMap.put(new ImmutablePair<>(webinar.getId(), panelist.getEmail()), panelist.getJoinUrl());
+                    String panelistEmail = appConfig.getZoom().getMaskPanelistEmail() ? unmaskEmail(panelist.getEmail()) : panelist.getEmail();
+                    panelistsJoinUrlMap.put(new ImmutablePair<>(webinar.getId(), panelistEmail), panelist.getJoinUrl());
                 }
                 log.info("Downloaded {} panelists for webinar {}", panelists.getTotalRecords(), webinar.getId());
             }
