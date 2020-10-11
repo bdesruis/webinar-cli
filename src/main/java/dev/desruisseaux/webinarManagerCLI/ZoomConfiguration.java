@@ -9,11 +9,7 @@ import javax.validation.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ZoomConfiguration {
     @NotEmpty
-    private String apiBaseUrl;
-    @NotEmpty
     private String jwtToken;
-    @NotEmpty
-    private String userEmail;
-    @NotEmpty
-    private String userId;
+    private String apiBaseUrl;
+    private Boolean maskPanelistEmail = true;
 }
