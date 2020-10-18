@@ -61,6 +61,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
 import static java.lang.Math.abs;
@@ -77,6 +78,10 @@ public class App implements Runnable {
 
     @Parameter(names = "--webinarId", description = "Select webinar with this id")
     private List<Long> webinardIds = new ArrayList<>();
+    @Parameter(names = "--webinarTopicIncludeRegExp", description = "Include webinars with a topic that matches this regexp")
+    private String webinarTopicIncludeRegExp;
+    @Parameter(names = "--webinarTopicExcludeRegExp", description = "Exclude webinars with a topic that matches this regexp")
+    private String webinarTopicExcludeRegExp;
     @Parameter(names = "--rangeStart", description = "Select webinars scheduled after this date (YYYY-MM-DD)")
     private Date rangeStart;
     @Parameter(names = "--rangeEnd", description = "Select webinars scheduled before this date (YYYY-MM-DD)")
@@ -551,9 +556,15 @@ public class App implements Runnable {
                     rangeStart = new Date();
                 }
                 webinarList = getWebinarsInTimeRange(rangeStart, rangeEnd);
+                if (StringUtils.isNotEmpty(webinarTopicIncludeRegExp)) {
+                    webinarList.removeIf(webinar -> !Pattern.compile(webinarTopicIncludeRegExp).matcher(webinar.getTopic()).matches());
+                }
+                if (StringUtils.isNotEmpty(webinarTopicExcludeRegExp)) {
+                    webinarList.removeIf(webinar -> Pattern.compile(webinarTopicExcludeRegExp).matcher(webinar.getTopic()).matches());
+                }
             }
 
-            if (webinarList != null) {
+            if (webinarList != null && webinarList.size() > 0) {
                 Collections.sort(webinarList);
                 rangeStart = webinarList.get(0).getStartTime();
                 Date rangeEndDate = webinarList.get(webinarList.size() - 1).getStartTime();
