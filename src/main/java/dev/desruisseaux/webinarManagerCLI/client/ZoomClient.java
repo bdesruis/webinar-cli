@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.desruisseaux.webinarManagerCLI.ZoomConfiguration;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomContacts;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomUser;
+import dev.desruisseaux.webinarManagerCLI.api.ZoomUsers;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinar;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinarPanelist;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinarPanelists;
@@ -278,6 +279,39 @@ public class ZoomClient {
             public ZoomUser execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/users/" + id;
                 return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomUser.class);
+            }
+        }
+
+        public ZoomClient.Users.List list() {
+            return new ZoomClient.Users.List();
+        }
+
+        public class List {
+            private String status = "active";
+            private Long pageSize = 30L;
+            private Long pageNumber = 1L;
+
+            public List() {
+            }
+
+            public ZoomClient.Users.List status(String status) {
+                this.status = status;
+                return this;
+            }
+
+            public ZoomClient.Users.List pageSize(Long pageSize) {
+                this.pageSize = pageSize;
+                return this;
+            }
+
+            public ZoomClient.Users.List pageNumber(Long pageNumber) {
+                this.pageNumber = pageNumber;
+                return this;
+            }
+
+            public ZoomUsers execute() throws IOException {
+                String url = ZoomClient.this.apiBaseUrl + "/users?status=" + status + "&page_size=" + pageSize + "&page_number=" + pageNumber;
+                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomUsers.class);
             }
         }
     }

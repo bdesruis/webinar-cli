@@ -6,7 +6,7 @@
 
   <groupId>dev.desruisseaux</groupId>
   <artifactId>webinar-cli</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.1-SNAPSHOT</version>
 
   <name>webinarManagerCLI</name>
   <url>https://github.com/bdesruis/webinar-cli</url>

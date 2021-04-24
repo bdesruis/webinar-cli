@@ -11,6 +11,8 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import dev.desruisseaux.webinarManagerCLI.api.ZoomUser;
+import dev.desruisseaux.webinarManagerCLI.api.ZoomUsers;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinar;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinarPanelist;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinarPanelists;
@@ -314,16 +316,15 @@ public class App implements Runnable {
         return webinarList;
     }
 
-    List<ZoomWebinar> getWebinarsInTimeRange(Date rangeStart, Date rangeEnd) {
+    List<ZoomWebinar> getWebinarsInTimeRange(String userId, Date rangeStart, Date rangeEnd) {
         List<ZoomWebinar> webinarList = new ArrayList<>();
         try {
             Long pageNumber = 1L;
             Long pageCount = 0L;
-            int webinarCount = 0;
 
             do {
-                log.info("Retrieving webinars (page {})", pageNumber);
-                ZoomWebinars webinars = zoomClient.webinars().list().pageSize(100L).pageNumber(pageNumber).execute();
+                log.info("Retrieving webinars of {} (page {})", userId, pageNumber);
+                ZoomWebinars webinars = zoomClient.webinars().list().userId(userId).pageSize(100L).pageNumber(pageNumber).execute();
                 if (webinars != null) {
                     pageCount = webinars.getPageCount();
                     for (ZoomWebinar item : webinars.getItems()) {
@@ -331,7 +332,6 @@ public class App implements Runnable {
                             ZoomWebinar webinar = zoomClient.webinars().get(item.getId()).execute();
                             if (webinar != null) {
                                 webinarList.add(webinar);
-                                webinarCount++;
                             } else {
                                 log.error("Unable to retrieve webinar {}", item.getId());
                             }
@@ -545,6 +545,30 @@ public class App implements Runnable {
         }
     }
 
+    List<String> getUserIds() {
+        List<String> userIds = new ArrayList<>();
+        try {
+            Long pageNumber = 1L;
+            Long pageCount = 0L;
+
+            do {
+                log.info("Retrieving users (page {})", pageNumber);
+                ZoomUsers users = zoomClient.users().list().pageSize(100L).pageNumber(pageNumber).execute();
+                if (users != null) {
+                    pageCount = users.getPageCount();
+                    for (ZoomUser item : users.getItems()) {
+                        userIds.add(item.getId());
+                    }
+                } else {
+                    log.error("Unable to retrieve users page {}", pageNumber);
+                }
+            } while (pageNumber++ < pageCount);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        return userIds;
+    }
+
     @Override
     public void run() {
         try {
@@ -555,7 +579,10 @@ public class App implements Runnable {
                 if (rangeStart == null) {
                     rangeStart = new Date();
                 }
-                webinarList = getWebinarsInTimeRange(rangeStart, rangeEnd);
+                webinarList = new ArrayList<ZoomWebinar>();
+                for (String userId : getUserIds()) {
+                    webinarList.addAll(getWebinarsInTimeRange(userId, rangeStart, rangeEnd));
+                }
                 if (StringUtils.isNotEmpty(webinarTopicIncludeRegExp)) {
                     webinarList.removeIf(webinar -> !Pattern.compile(webinarTopicIncludeRegExp).matcher(webinar.getTopic()).matches());
                 }
@@ -610,7 +637,7 @@ public class App implements Runnable {
     public static void main(String[] args) {
         JCommander jc = null;
         try {
-            log.info("Webinar Manager CLI for Zoom - Version 1.0");
+            log.info("Webinar Manager CLI for Zoom - Version 1.1");
             App main = new App();
             jc = JCommander.newBuilder().addObject(main).build();
             jc.parse(args);
