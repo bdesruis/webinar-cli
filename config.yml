@@ -2,9 +2,14 @@
 # Webinar Manager CLI for Zoom
 #
 zoom:
-  # See: https://marketplace.zoom.us/develop/create
-  #      https://marketplace.zoom.us/docs/guides/auth/jwt
-  jwtToken: replace.with.your.jwtToken
+  # See: https://developers.zoom.us/docs/internal-apps/create/
+  #      https://developers.zoom.us/docs/internal-apps/s2s-oauth/
+  #      https://marketplace.zoom.us/docs/guides/build/server-to-server-oauth-app/
+  #      https://marketplace.zoom.us/docs/guides/auth/oauth/oauth-scopes/
+  # Scopes: [ account:master, account:read:admin, account:write:admin, report:master, user:master, user:read:admin, user:write:admin, webinar:master, webinar:read:admin, webinar:write:admin ]
+  clientId: replace.with.your.clientId
+  clientSecret: replace.with.your.clientSecret
+  accountId: replace.with.your.accountId
 
 calendar:
   descriptionPrefix: "Inscription au cours:\n\t"

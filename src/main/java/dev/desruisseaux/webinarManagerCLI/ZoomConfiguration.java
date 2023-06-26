@@ -11,5 +11,9 @@ public class ZoomConfiguration {
     @NotEmpty
     private String jwtToken;
     private String apiBaseUrl;
+    private String oAuthBaseUrl;
+    private String clientId;
+    private String clientSecret;
+    private String accountId;
     private Boolean maskPanelistEmail = true;
 }

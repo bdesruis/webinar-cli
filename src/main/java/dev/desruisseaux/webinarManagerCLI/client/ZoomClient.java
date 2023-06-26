@@ -12,6 +12,7 @@ import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinarPanelistsCreateResponse
 import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinarRegistrant;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinarRegistrants;
 import dev.desruisseaux.webinarManagerCLI.api.ZoomWebinars;
+import dev.desruisseaux.webinarManagerCLI.oauth.ZoomOAuthTokenSupplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -26,7 +27,9 @@ import java.net.URLConnection;
 public class ZoomClient {
     private final static ThreadLocal<ObjectMapper> mapperLocal = new ThreadLocal<>();
     private final String apiBaseUrl;
-    private final String jwtToken;
+    private String accountId;
+    private ZoomOAuthClient zoomOAuthClient;
+    private ZoomOAuthTokenSupplier tokenSupplier;
 
     public static synchronized ObjectMapper getMapper() {
         ObjectMapper mapper = mapperLocal.get();
@@ -38,9 +41,12 @@ public class ZoomClient {
     }
 
     private ZoomClient(String apiBaseUrl,
-                       String jwtToken) {
+                       String accountId,
+                       ZoomOAuthClient zoomOAuthClient) {
         this.apiBaseUrl = apiBaseUrl;
-        this.jwtToken = jwtToken;
+        this.accountId = accountId;
+        this.zoomOAuthClient = zoomOAuthClient;
+        this.tokenSupplier = new ZoomOAuthTokenSupplier(zoomOAuthClient, accountId);
     }
 
     public static ZoomClientBuilder builder() {
@@ -67,7 +73,8 @@ public class ZoomClient {
         private static final String defaultApiBaseUrl = "https://api.zoom.us/v2";
         private String apiBaseUrl;
         private boolean apiBaseUrl$set;
-        private String jwtToken;
+        private String accountId;
+        private ZoomOAuthClient zoomOAuthClient;
 
         ZoomClientBuilder() {
         }
@@ -77,7 +84,8 @@ public class ZoomClient {
                 this.apiBaseUrl = config.getApiBaseUrl();
                 this.apiBaseUrl$set = true;
             }
-            this.jwtToken = config.getJwtToken();
+            this.accountId = config.getAccountId();
+            this.zoomOAuthClient = ZoomOAuthClient.builder().fromConfig(config).build();
             return this;
         }
 
@@ -87,13 +95,18 @@ public class ZoomClient {
             return this;
         }
 
-        public ZoomClientBuilder jwtToken(String jwtToken) {
-            this.jwtToken = jwtToken;
+        public ZoomClientBuilder accountId(String accountId) {
+            this.accountId = accountId;
+            return this;
+        }
+
+        public ZoomClientBuilder zoomOAuthClient(ZoomOAuthClient zoomOAuthClient) {
+            this.zoomOAuthClient = zoomOAuthClient;
             return this;
         }
 
         public ZoomClient build() {
-            return new ZoomClient(apiBaseUrl$set ? apiBaseUrl : defaultApiBaseUrl, jwtToken);
+            return new ZoomClient(apiBaseUrl$set ? apiBaseUrl : defaultApiBaseUrl, accountId, zoomOAuthClient);
         }
     }
 
@@ -114,7 +127,7 @@ public class ZoomClient {
 
             public ZoomWebinar execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/webinars/" + id;
-                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomWebinar.class);
+                return ZoomClient.execute(url, ZoomClient.this.tokenSupplier.getAccessToken(), ZoomWebinar.class);
             }
         }
 
@@ -146,7 +159,7 @@ public class ZoomClient {
 
             public ZoomWebinars execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/users/" + userId + "/webinars?page_size=" + pageSize + "&page_number=" + pageNumber;
-                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomWebinars.class);
+                return ZoomClient.execute(url, ZoomClient.this.tokenSupplier.getAccessToken(), ZoomWebinars.class);
             }
         }
     }
@@ -170,7 +183,7 @@ public class ZoomClient {
 
             public ZoomWebinarPanelist execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/webinars/" + webinarId + "/panelists/" + panelistId;
-                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomWebinarPanelist.class);
+                return ZoomClient.execute(url, ZoomClient.this.tokenSupplier.getAccessToken(), ZoomWebinarPanelist.class);
             }
         }
 
@@ -192,7 +205,7 @@ public class ZoomClient {
                 HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
                 conn.setDoOutput(true);
                 conn.setRequestMethod("POST");
-                conn.setRequestProperty("Authorization", "Bearer " + jwtToken);
+                conn.setRequestProperty("Authorization", "Bearer " + ZoomClient.this.tokenSupplier.getAccessToken());
                 conn.setRequestProperty("Content-type", "application/json");
                 conn.setRequestProperty("Accept", "*/*");
                 OutputStream os = conn.getOutputStream();
@@ -215,7 +228,7 @@ public class ZoomClient {
 
             public ZoomWebinarPanelists execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/webinars/" + webinarId + "/panelists";
-                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomWebinarPanelists.class);
+                return ZoomClient.execute(url, ZoomClient.this.tokenSupplier.getAccessToken(), ZoomWebinarPanelists.class);
             }
         }
     }
@@ -239,7 +252,7 @@ public class ZoomClient {
 
             public ZoomWebinarRegistrant execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/webinars/" + webinarId + "/registrants/" + registrantId;
-                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomWebinarRegistrant.class);
+                return ZoomClient.execute(url, ZoomClient.this.tokenSupplier.getAccessToken(), ZoomWebinarRegistrant.class);
             }
         }
 
@@ -256,7 +269,7 @@ public class ZoomClient {
 
             public ZoomWebinarRegistrants execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/webinars/" + webinarId + "/registrants";
-                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomWebinarRegistrants.class);
+                return ZoomClient.execute(url, ZoomClient.this.tokenSupplier.getAccessToken(), ZoomWebinarRegistrants.class);
             }
         }
     }
@@ -278,7 +291,7 @@ public class ZoomClient {
 
             public ZoomUser execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/users/" + id;
-                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomUser.class);
+                return ZoomClient.execute(url, ZoomClient.this.tokenSupplier.getAccessToken(), ZoomUser.class);
             }
         }
 
@@ -311,7 +324,7 @@ public class ZoomClient {
 
             public ZoomUsers execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/users?status=" + status + "&page_size=" + pageSize + "&page_number=" + pageNumber;
-                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomUsers.class);
+                return ZoomClient.execute(url, ZoomClient.this.tokenSupplier.getAccessToken(), ZoomUsers.class);
             }
         }
     }
@@ -333,7 +346,7 @@ public class ZoomClient {
 
             public ZoomUser execute() throws IOException {
                 String url = ZoomClient.this.apiBaseUrl + "/contacts/" + id;
-                return ZoomClient.execute(url, ZoomClient.this.jwtToken, ZoomUser.class);
+                return ZoomClient.execute(url, ZoomClient.this.tokenSupplier.getAccessToken(), ZoomUser.class);
             }
         }
         public ZoomClient.Contacts.List list() {
@@ -379,7 +392,7 @@ public class ZoomClient {
                 if (StringUtils.isNotEmpty(nextPageToken))
                     url.addParameter("next_page_token", nextPageToken);
 
-                return ZoomClient.execute(url.toString(), ZoomClient.this.jwtToken, ZoomContacts.class);
+                return ZoomClient.execute(url.toString(), ZoomClient.this.tokenSupplier.getAccessToken(), ZoomContacts.class);
             }
         }
     }
